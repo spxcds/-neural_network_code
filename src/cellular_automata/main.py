@@ -6,9 +6,10 @@
 # @Author  : sunxiaodong (sunxiaodong@360.cn)
 
 import os
+import time
 import numpy as np
 from PIL import Image
-from concurrent.futures import ThreadPoolExecutor, wait
+from concurrent.futures import ThreadPoolExecutor, wait, as_completed
 from multiprocessing import cpu_count
 
 
@@ -75,6 +76,11 @@ def load_data(data_path):
     return data
 
 
+pool = ThreadPoolExecutor(max_workers=cpu_count())
+tasks = []
+MAX_TASKS = 200
+
+
 def draw_img_by_rules(img_data, rule_list, steps, directory_name):
     """
     img_data: a list indicates the img data
@@ -90,13 +96,17 @@ def draw_img_by_rules(img_data, rule_list, steps, directory_name):
     for rule_no in rule_list:
         rule.set_rule_no(rule_no)
         mca = MnistCellularAutomata(img_data, rule.default_update_rule, neighbor_radius=1)
-        mca.update_and_save(steps=steps, file_name=os.path.join(directory_name, str(rule_no)) + '.jpeg')
+        # mca.update_and_save(steps=steps, file_name=os.path.join(directory_name, str(rule_no)) + '.jpeg')
+        tasks.append(
+            pool.submit(
+                mca.update_and_save, steps=steps, file_name=os.path.join(directory_name, str(rule_no)) + '.jpeg'))
+        while len(tasks) >= MAX_TASKS:
+            for task in as_completed(tasks):
+                tasks.remove(task)
+            time.sleep(1)
 
 
 if __name__ == '__main__':
-
-    pool = ThreadPoolExecutor(max_workers=cpu_count())
-    tasks = []
 
     root_path = '../../dataset/mnist'
     num = 1  # each kind of pic num
@@ -105,7 +115,9 @@ if __name__ == '__main__':
         data_num = i
         data_path = os.path.join(root_path, str(data_num) + '.csv')
         data = load_data(data_path)
+
         for j in range(num):
-            tasks.append(
-                pool.submit(draw_img_by_rules, data[j], range(3, 6), 1000, os.path.join('build', str(i), str(j))))
+            print('Digit num: {}'.format(i))
+            draw_img_by_rules(
+                img_data=data[j], rule_list=range(256), steps=100, directory_name=os.path.join('build', str(i), str(j)))
     wait(tasks)
