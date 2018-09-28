@@ -2,15 +2,16 @@
 # -*- coding: utf-8 -*-
 
 # @File    : main.py
-# @Time    : 2018/09/25
-# @Author  : sunxiaodong (sunxiaodong@360.cn)
+# @Time    : 2018/09/28
+# @Author  : spxcds (spxcds@gmail.com)
 
 import os
 import time
 import numpy as np
 from PIL import Image
 from concurrent.futures import ThreadPoolExecutor, wait, as_completed
-from multiprocessing import cpu_count
+
+# from multiprocessing import cpu_count
 
 
 class CellularAutomataUpdateRules(object):
@@ -76,9 +77,10 @@ def load_data(data_path):
     return data
 
 
-pool = ThreadPoolExecutor(max_workers=cpu_count())
+# pool = ThreadPoolExecutor(max_workers=cpu_count())
+pool = ThreadPoolExecutor(max_workers=4)
 tasks = []
-MAX_TASKS = 200
+MAX_TASKS = 32
 
 
 def draw_img_by_rules(img_data, rule_list, steps, directory_name):
@@ -119,5 +121,8 @@ if __name__ == '__main__':
         for j in range(num):
             print('Digit num: {}'.format(i))
             draw_img_by_rules(
-                img_data=data[j], rule_list=range(256), steps=100, directory_name=os.path.join('build', str(i), str(j)))
+                img_data=data[j],
+                rule_list=range(256),
+                steps=1000,
+                directory_name=os.path.join('build', str(i), str(j)))
     wait(tasks)
