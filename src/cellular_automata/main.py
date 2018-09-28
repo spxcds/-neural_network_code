@@ -26,8 +26,8 @@ class CellularAutomataUpdateRules(object):
         neighbor is a list type
         """
         rule_no = self.rule_no
-        num = np.sum([2**i for i in range(len(neighbor)) if neighbor[-(i + 1)]])
-        return num in [i for i in range(len(bin(rule_no))) if bin(rule_no)[::-1][i] == '1']
+        num = int(np.sum([2**i for i in range(len(neighbor)) if neighbor[i]]))
+        return (1 << num) & rule_no
 
 
 class MnistCellularAutomata(object):
@@ -94,8 +94,8 @@ def draw_img_by_rules(img_data, rule_list, steps, directory_name):
 
     MnistCellularAutomata.img_save(array=img_data.reshape(28, 28), file_name=os.path.join(directory_name, 'pic.jpeg'))
 
-    rule = CellularAutomataUpdateRules()
     for rule_no in rule_list:
+        rule = CellularAutomataUpdateRules()
         rule.set_rule_no(rule_no)
         mca = MnistCellularAutomata(img_data, rule.default_update_rule, neighbor_radius=1)
         # mca.update_and_save(steps=steps, file_name=os.path.join(directory_name, str(rule_no)) + '.jpeg')
