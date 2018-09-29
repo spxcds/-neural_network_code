@@ -2,7 +2,7 @@
 
 ## 环境依赖
 
-Python版本为3.6 其余依赖详见`requirements.txt`
+Python版本为3.6, 其余详见`requirements.txt`
 
 
 ### 数据

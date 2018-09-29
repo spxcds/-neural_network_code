@@ -26,7 +26,7 @@ class CellularAutomataUpdateRules(object):
         neighbor is a list type
         """
         rule_no = self.rule_no
-        num = int(np.sum([2**i for i in range(len(neighbor)) if neighbor[i]]))
+        num = int(np.sum(2**i for i, j in enumerate(neighbor) if j))
         return (1 << num) & rule_no
 
 
@@ -81,27 +81,29 @@ def load_data(data_path):
 pool = ThreadPoolExecutor(max_workers=4)
 tasks = []
 MAX_TASKS = 32
+ROOT_DIR = 'build'
 
 
-def draw_img_by_rules(img_data, rule_list, steps, directory_name):
+def draw_img_by_rules(img_data, rule_list, steps, file_name):
     """
     img_data: a list indicates the img data
     rule_list: a list indicates the rule
     directory_name: save ca picture in this directory_name
     """
-    if not os.path.exists(directory_name):
-        os.makedirs(directory_name)
-
-    MnistCellularAutomata.img_save(array=img_data.reshape(28, 28), file_name=os.path.join(directory_name, 'pic.jpeg'))
+    # MnistCellularAutomata.img_save(array=img_data.reshape(28, 28), file_name=os.path.join(file_name, 'pic.jpeg'))
 
     for rule_no in rule_list:
+        # create dirname
+        dirname = os.path.join(ROOT_DIR, str(rule_no), os.path.dirname(file_name))
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+
         rule = CellularAutomataUpdateRules()
         rule.set_rule_no(rule_no)
         mca = MnistCellularAutomata(img_data, rule.default_update_rule, neighbor_radius=1)
         # mca.update_and_save(steps=steps, file_name=os.path.join(directory_name, str(rule_no)) + '.jpeg')
         tasks.append(
-            pool.submit(
-                mca.update_and_save, steps=steps, file_name=os.path.join(directory_name, str(rule_no)) + '.jpeg'))
+            pool.submit(mca.update_and_save, steps=steps, file_name=os.path.join(ROOT_DIR, str(rule_no), file_name)))
         while len(tasks) >= MAX_TASKS:
             for task in as_completed(tasks):
                 tasks.remove(task)
@@ -109,20 +111,21 @@ def draw_img_by_rules(img_data, rule_list, steps, directory_name):
 
 
 if __name__ == '__main__':
-
     root_path = '../../dataset/mnist'
-    num = 1  # each kind of pic num
+    num = 50  # each kind of pic num
 
-    for i in range(10):
-        data_num = i
-        data_path = os.path.join(root_path, str(data_num) + '.csv')
+    for digit_num in range(10):
+        if digit_num not in [1, 8]:
+            continue
+        data_path = os.path.join(root_path, str(digit_num) + '.csv')
         data = load_data(data_path)
 
         for j in range(num):
-            print('Digit num: {}'.format(i))
+            print('Digit num: {}'.format(digit_num))
             draw_img_by_rules(
                 img_data=data[j],
                 rule_list=range(256),
                 steps=1000,
-                directory_name=os.path.join('build', str(i), str(j)))
+                file_name=os.path.join(str(digit_num),
+                                       str(j) + '.jpeg'))
     wait(tasks)
