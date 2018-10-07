@@ -21,6 +21,8 @@ class Ploter(object):
         self.ys = [0]
         self.line = None
 
+        self.text = plt.figtext(0.7, 0.95, '', fontsize=10, ha='left')
+
         plt.legend()
         self.ani = animation.FuncAnimation(self.fig, self.update, interval=200)
 
@@ -31,6 +33,9 @@ class Ploter(object):
         self.xs = xs
         self.ys = ys
 
+    def set_figtext(self, s):
+        self.text.set_text(s)
+
     def update(self, frame, *fargs):
         if not self.line:
             self.line = self.ax.plot(self.xs, self.ys, color='red', linewidth=3)[0]
@@ -39,7 +44,7 @@ class Ploter(object):
             self.line.set_ydata(self.ys)
 
 
-def get_data(low=5, high=50, data_size=5):
+def get_data(low=5, high=50, data_size=50):
     y = np.random.randint(low=low, high=high, size=data_size)
     y.sort()
     y = y.reshape(y.shape[0], 1)
@@ -56,37 +61,29 @@ def gradient_descent(X, y, W):
 
 def linear_regression(p):
 
-    # J(W) = 1/2m * ∑(X*W - y)^2
-    # J'(W) = 1/m * ∑(X*W - y) * X
+    # J(W) = 1/2m∑(XW - y)^2
+    # J'(W) = 1/m∑(XW - y)X
     """numpy
-    J(W) = 1/2m * (X * W - y)^T * (X * W - y)
-    
+    J(W) = 1/2m(XW - y)^T(XW - y)
+    J'(W) = 1/m(X^T)(XW - y)
     """
 
     X, y = get_data()
-    y += 50
     p.set_scatter(X[:, 0], y.flatten())
     W = np.random.rand(X.shape[1], 1)
 
-    alpha = 1
+    alpha = 0.001
     gradient = gradient_descent(X, y, W)
-    # print(gradient)
+    pre_gradient = gradient
     while not np.all(np.absolute(gradient) <= 1e-5):
-        # print('##' * 40)
-        # time.sleep(1)
         W = W - alpha * gradient
 
         gradient = gradient_descent(X, y, W)
         x0 = np.arange(50)
         y0 = np.dot(np.vstack((x0, np.ones(50))).T, W)
 
-        print('gradient: {}'.format(gradient))
-        print('Weights: {}'.format(W))
-
+        p.set_figtext('y = {}x + {}'.format(W[0], W[1]))
         p.set_lines(x0, y0.flatten())
-
-    # print('gradient: {}'.format(gradient))
-    # print('Weights: {}'.format(W))
 
 
 def main():
