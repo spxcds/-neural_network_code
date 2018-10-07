@@ -69,6 +69,7 @@ def linear_regression(p):
     """
 
     X, y = get_data()
+
     p.set_scatter(X[:, 0], y.flatten())
     W = np.random.rand(X.shape[1], 1)
 
